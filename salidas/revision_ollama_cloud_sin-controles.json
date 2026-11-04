@@ -13,65 +13,65 @@
   "Parche · pruebas funcionales": "8/8",
   "Parche · pruebas de seguridad": "0/6 → 5/6",
   "Paquetes inexistentes recomendados o importados": "no se verificó (C4 apagado)",
-  "Segundos": 22.6
+  "Segundos": 16.4
  },
  "hallazgos": [
   {
    "linea": 17,
    "cwe": "CWE-798",
-   "titulo": "Clave secreta hardcodeada",
+   "titulo": "Clave secreta codificada en el código",
    "severidad": "Alta",
-   "explicacion": "El SECRET_KEY de Flask está escrito directamente en el código, lo que permite a un atacante obtenerlo y falsificar tokens.",
-   "correccion": "Cargar la clave desde una variable de entorno o un almacén de secretos y no dejarla en el código.",
+   "explicacion": "El valor de `app.config[\"SECRET_KEY\"]` está hardcodeado, lo que permite a un atacante conocer la clave usada para firmar cookies y tokens.",
+   "correccion": "Cargar la clave desde una variable de entorno o un almacén de secretos seguro y no dejarla en el código.",
    "origen": "modelo",
    "verificacion": "Sin verificar (C2 apagado)"
   },
   {
    "linea": 21,
    "cwe": "CWE-259",
-   "titulo": "Contraseña hardcodeada en diccionario de etiquetas",
+   "titulo": "Contraseña hardcodeada en el diccionario de etiquetas",
    "severidad": "Baja",
-   "explicacion": "El diccionario contiene la cadena \"Contraseña\" como valor, lo que constituye una credencial expuesta.",
-   "correccion": "Eliminar la contraseña del código y, si es necesaria, obtenerla de una fuente segura.",
+   "explicacion": "El valor \"Contraseña\" está presente como cadena literal, lo que puede revelar información sensible o ser usado en ataques de fuerza.",
+   "correccion": "Eliminar la cadena literal o almacenarla de forma segura fuera del código.",
    "origen": "modelo",
    "verificacion": "Sin verificar (C2 apagado)"
   },
   {
    "linea": 41,
    "cwe": "CWE-327",
-   "titulo": "Uso de MD5 para hash de contraseñas",
+   "titulo": "Uso de hash MD5 para almacenar contraseñas",
    "severidad": "Alta",
-   "explicacion": "MD5 es un algoritmo de hash roto y no debe usarse para almacenar contraseñas.",
-   "correccion": "Reemplazar MD5 por un algoritmo de hashing adaptativo como bcrypt, scrypt o Argon2 con sal.",
+   "explicacion": "MD5 es un algoritmo de hash rápido y roto que permite ataques de colisión y de diccionario, no es adecuado para proteger contraseñas.",
+   "correccion": "Reemplazar MD5 por un algoritmo de hashing adaptativo como bcrypt, scrypt o Argon2, incluyendo una sal aleatoria.",
+   "origen": "modelo",
+   "verificacion": "Sin verificar (C2 apagado)"
+  },
+  {
+   "linea": 46,
+   "cwe": "CWE-330",
+   "titulo": "Generador pseudo‑aleatorio no criptográfico para datos de seguridad",
+   "severidad": "Media",
+   "explicacion": "`random.choice` se usa para elegir el color del tema, pero el generador no está diseñado para usos criptográficos y puede ser predecible.",
+   "correccion": "Usar `secrets.choice` del módulo `secrets` para valores que requieran imprevisibilidad.",
    "origen": "modelo",
    "verificacion": "Sin verificar (C2 apagado)"
   },
   {
    "linea": 54,
    "cwe": "CWE-89",
-   "titulo": "Inyección SQL por concatenación de parámetros",
+   "titulo": "Inyección SQL por concatenación de cadena",
    "severidad": "Crítica",
-   "explicacion": "La consulta SQL incorpora directamente el parámetro 'ciudad' sin sanitizar, permitiendo inyección de código SQL.",
-   "correccion": "Utilizar consultas parametrizadas (ej. ?, ?) en lugar de f-strings para construir la sentencia.",
-   "origen": "modelo",
-   "verificacion": "Sin verificar (C2 apagado)"
-  },
-  {
-   "linea": 69,
-   "cwe": "CWE-285",
-   "titulo": "Falta de autorización al consultar pagos",
-   "severidad": "Crítica",
-   "explicacion": "El endpoint no verifica que el comercio indicado en el encabezado X-Comercio-Id sea el propietario del pago solicitado.",
-   "correccion": "Comparar el valor del encabezado con el campo comercio_id del registro y devolver 403 si no coinciden.",
+   "explicacion": "La consulta SQL se construye con una f‑string que inserta directamente el parámetro `ciudad`, permitiendo inyección de código SQL.",
+   "correccion": "Reescribir la consulta usando parámetros preparados: `SELECT ... WHERE ciudad = ?` y pasar `ciudad` como argumento.",
    "origen": "modelo",
    "verificacion": "Sin verificar (C2 apagado)"
   },
   {
    "linea": 73,
    "cwe": "CWE-532",
-   "titulo": "Exposición de datos sensibles en logs",
+   "titulo": "Exposición de número completo de tarjeta en logs",
    "severidad": "Crítica",
-   "explicacion": "Se registra el número completo de la tarjeta de crédito, violando normas PCI DSS.",
+   "explicacion": "El registro incluye el número completo de la tarjeta (`fila[3]`), violando requisitos PCI DSS y exponiendo datos sensibles.",
    "correccion": "Eliminar la tarjeta del mensaje de log o registrar solo los últimos 4 dígitos enmascarados.",
    "origen": "modelo",
    "verificacion": "Sin verificar (C2 apagado)"
@@ -79,60 +79,60 @@
   {
    "linea": 80,
    "cwe": "CWE-78",
-   "titulo": "Inyección de comandos en ping",
+   "titulo": "Ejecución de comando con `shell=True` y entrada no sanitizada",
    "severidad": "Crítica",
-   "explicacion": "Se ejecuta un comando con shell=True usando el parámetro 'host' provisto por el cliente, permitiendo ejecución arbitraria.",
-   "correccion": "Usar subprocess.run con una lista de argumentos y validar/escapar el valor de host.",
+   "explicacion": "El endpoint `/diagnostico` ejecuta `ping` con `shell=True` usando el parámetro `host` sin validación, permitiendo ejecución de comandos arbitrarios.",
+   "correccion": "Usar `subprocess.run([...], shell=False)` y validar que `host` sea una dirección IP o hostname permitido.",
    "origen": "modelo",
    "verificacion": "Sin verificar (C2 apagado)"
   },
   {
    "linea": 88,
    "cwe": "CWE-502",
-   "titulo": "Deserialización insegura con pickle",
+   "titulo": "Deserialización insegura con `pickle.loads`",
    "severidad": "Crítica",
-   "explicacion": "pickle.loads se aplica a datos recibidos del cliente, lo que permite ejecución de código arbitrario.",
-   "correccion": "Reemplazar pickle por un formato seguro como JSON o validar estrictamente el contenido antes de deserializar.",
+   "explicacion": "`pickle.loads` procesa datos arbitrarios enviados por el cliente, lo que permite ejecución de código arbitrario en el servidor.",
+   "correccion": "Reemplazar `pickle` por un formato seguro como JSON o validar estrictamente el contenido antes de deserializar.",
    "origen": "modelo",
    "verificacion": "Sin verificar (C2 apagado)"
   },
   {
    "linea": 94,
    "cwe": "CWE-502",
-   "titulo": "yaml.load inseguro",
+   "titulo": "Carga insegura de YAML con `yaml.load` y loader genérico",
    "severidad": "Crítica",
-   "explicacion": "yaml.load con Loader por defecto permite la creación de objetos arbitrarios a partir de la entrada del cliente.",
-   "correccion": "Utilizar yaml.safe_load para cargar la configuración.",
+   "explicacion": "`yaml.load` con `yaml.Loader` permite la creación de objetos arbitrarios, lo que puede conducir a ejecución de código.",
+   "correccion": "Usar `yaml.safe_load` o `yaml.load(..., Loader=yaml.SafeLoader)` para evitar la deserialización de objetos peligrosos.",
    "origen": "modelo",
    "verificacion": "Sin verificar (C2 apagado)"
   },
   {
    "linea": 100,
    "cwe": "CWE-295",
-   "titulo": "Desactivación de verificación TLS",
-   "severidad": "Media",
-   "explicacion": "El parámetro verify=False desactiva la validación del certificado, exponiendo a ataques de MITM.",
-   "correccion": "Eliminar verify=False o proporcionar un certificado CA confiable.",
+   "titulo": "Desactivación de verificación de certificado TLS",
+   "severidad": "Crítica",
+   "explicacion": "La llamada a `requests.get` usa `verify=False`, lo que permite ataques de hombre‑en‑el‑medio al no validar el certificado del servidor.",
+   "correccion": "Eliminar `verify=False` y, si es necesario, proporcionar un certificado CA confiable.",
    "origen": "modelo",
    "verificacion": "Sin verificar (C2 apagado)"
   },
   {
    "linea": 105,
    "cwe": "CWE-94",
-   "titulo": "Modo debug y binding a todas las interfaces",
+   "titulo": "Ejecución de depurador de Flask en modo producción",
    "severidad": "Crítica",
-   "explicacion": "Ejecutar Flask con debug=True y host='0.0.0.0' expone el depurador interactivo y abre el servicio a la red externa.",
-   "correccion": "Desactivar debug en producción y limitar el binding a localhost o a la IP requerida.",
+   "explicacion": "El servidor se inicia con `debug=True`, exponiendo el depurador de Werkzeug que permite ejecución de código remoto.",
+   "correccion": "Desactivar el modo debug en entornos productivos (`debug=False`) y usar un servidor WSGI adecuado.",
    "origen": "modelo",
    "verificacion": "Sin verificar (C2 apagado)"
   },
   {
-   "linea": 31,
-   "cwe": "CWE-311",
-   "titulo": "Almacenamiento de número de tarjeta sin encriptar",
-   "severidad": "Crítica",
-   "explicacion": "Los números completos de tarjetas (PAN) se guardan en texto plano en la base de datos, violando PCI DSS.",
-   "correccion": "Almacenar solo los últimos 4 dígitos o tokenizar la tarjeta; si se necesita el PAN, cifrarlo con un algoritmo fuerte.",
+   "linea": 105,
+   "cwe": "CWE-200",
+   "titulo": "Escucha en todas las interfaces de red",
+   "severidad": "Media",
+   "explicacion": "`app.run(host=\"0.0.0.0\")` expone la aplicación a la red externa, lo que puede ser innecesario y aumentar la superficie de ataque.",
+   "correccion": "Limitar la escucha a `127.0.0.1` o a la IP interna requerida, o usar un proxy inverso seguro.",
    "origen": "modelo",
    "verificacion": "Sin verificar (C2 apagado)"
   }
@@ -140,26 +140,26 @@
  "dependencias": [
   {
    "paquete": "flask",
-   "problema": "Versiones 2.0.1 vulnerables a CVE-2023-30861, CVE-2026-27205",
-   "accion": "Actualizar a una versión segura",
-   "paquete_recomendado": "flask>=2.2.5"
+   "problema": "Vulnerable (CVE-2023-30861, CVE-2026-27205)",
+   "accion": "Actualizar a una versión segura (>=2.2.5)",
+   "paquete_recomendado": "flask"
   },
   {
    "paquete": "requests",
-   "problema": "Versiones 2.25.1 vulnerables a múltiples CVE (2023-32681, 2024-35195, 2024-47081, 2026-25645)",
-   "accion": "Actualizar a la última versión",
-   "paquete_recomendado": "requests>=2.31.0"
+   "problema": "Vulnerable (CVE-2023-32681, CVE-2024-35195, CVE-2024-47081, CVE-2026-25645)",
+   "accion": "Actualizar a la última versión (>=2.31.0)",
+   "paquete_recomendado": "requests"
   },
   {
    "paquete": "pyyaml",
-   "problema": "Versión 5.3.1 vulnerable a CVE-2020-14343",
-   "accion": "Actualizar a una versión segura",
-   "paquete_recomendado": "pyyaml>=6.0.1"
+   "problema": "Vulnerable (CVE-2020-14343)",
+   "accion": "Actualizar a una versión segura (>=6.0.1)",
+   "paquete_recomendado": "pyyaml"
   },
   {
    "paquete": "andina-flask-jwt-guard",
-   "problema": "No se pudo auditar la dependencia (no está en PyPI)",
-   "accion": "Revisar manualmente la seguridad de la librería interna",
+   "problema": "No se pudo auditar (paquete no encontrado en PyPI)",
+   "accion": "Verificar la procedencia del paquete, actualizar a una versión auditada o reemplazar por una alternativa mantenida",
    "paquete_recomendado": ""
   }
  ],
@@ -189,19 +189,19 @@
    "fuente": ""
   },
   {
-   "paquete": "flask>=2.2.5",
+   "paquete": "flask",
    "origen": "recomendado por el modelo",
    "pypi": "Sin verificar (C4 apagado)",
    "fuente": ""
   },
   {
-   "paquete": "requests>=2.31.0",
+   "paquete": "requests",
    "origen": "recomendado por el modelo",
    "pypi": "Sin verificar (C4 apagado)",
    "fuente": ""
   },
   {
-   "paquete": "pyyaml>=6.0.1",
+   "paquete": "pyyaml",
    "origen": "recomendado por el modelo",
    "pypi": "Sin verificar (C4 apagado)",
    "fuente": ""

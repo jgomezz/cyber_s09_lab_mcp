@@ -1,12 +1,12 @@
 [servidor] iniciado · aplicación revisada: /Users/developer/git_cyber/cyber_s09_lab_mcp/app_andina · espero mensajes JSON-RPC por stdin
 [servidor] recibí tools/call listar_archivos()
-[servidor] listar_archivos: devuelvo 30 caracteres en 0 ms
-[servidor] recibí tools/call analizar_bandit(): ejecuto bandit -r
-[servidor] analizar_bandit: devuelvo 3052 caracteres en 117 ms
-[servidor] recibí tools/call analizar_semgrep(): ejecuto semgrep con reglas_semgrep/andina.yml
-[servidor] analizar_semgrep: devuelvo 2263 caracteres en 1597 ms
-[servidor] recibí tools/call auditar_dependencias(): ejecuto pip-audit
-[servidor] auditar_dependencias: origen de los datos = pip-audit en vivo
-[servidor] auditar_dependencias: devuelvo 540 caracteres en 546 ms
+[servidor] listar_archivos: devuelvo 30 caracteres en 1 ms
 [servidor] recibí tools/call leer_codigo(archivo='app.py', desde=1, hasta=0)
 [servidor] leer_codigo: devuelvo 4466 caracteres en 1 ms
+[servidor] recibí tools/call analizar_bandit(): ejecuto bandit -r
+[servidor] analizar_bandit: devuelvo 3052 caracteres en 106 ms
+[servidor] recibí tools/call analizar_semgrep(): ejecuto semgrep con reglas_semgrep/andina.yml
+[servidor] analizar_semgrep: devuelvo 2263 caracteres en 1663 ms
+[servidor] recibí tools/call auditar_dependencias(): ejecuto pip-audit
+[servidor] auditar_dependencias: origen de los datos = pip-audit en vivo
+[servidor] auditar_dependencias: devuelvo 540 caracteres en 773 ms

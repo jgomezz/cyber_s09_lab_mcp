@@ -3,16 +3,16 @@
 No usar en producción. Cada falla está documentada en data/referencia_hallazgos.json.
 """
 import hashlib
-import ipaddress
 import logging
 import pickle
 import random
 import sqlite3
 import subprocess
+import ipaddress
 
 import requests
 import yaml
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, abort
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "andina-secreto-2024"
@@ -27,16 +27,14 @@ def conexion():
     global DB
     if DB is None:
         DB = sqlite3.connect(":memory:", check_same_thread=False)
-        DB.executescript(
-            """
+        DB.executescript("""
             CREATE TABLE comercios (id INTEGER PRIMARY KEY, nombre TEXT, ciudad TEXT, clave_hash TEXT);
             CREATE TABLE pagos (id INTEGER PRIMARY KEY, comercio_id INTEGER, monto REAL, tarjeta TEXT);
             INSERT INTO comercios VALUES (1, 'Bodega San Martín', 'Lima', '5f4dcc3b5aa765d61d8327deb882cf99');
             INSERT INTO comercios VALUES (2, 'Farmacia Misti', 'Arequipa', 'e10adc3949ba59abbe56e057f20f883e');
             INSERT INTO pagos VALUES (10, 1, 125.50, '4111111111111111');
             INSERT INTO pagos VALUES (11, 2, 89.90, '5500000000000004');
-            """
-        )
+        """)
     return DB
 
 
@@ -56,9 +54,10 @@ def salud():
 @app.route("/comercios/buscar")
 def buscar_comercios():
     ciudad = request.args.get("ciudad", "")
-    filas = conexion().execute(
+    cursor = conexion().execute(
         "SELECT id, nombre, ciudad FROM comercios WHERE ciudad = ?", (ciudad,)
-    ).fetchall()
+    )
+    filas = cursor.fetchall()
     return jsonify([{"id": f[0], "nombre": f[1], "ciudad": f[2]} for f in filas])
 
 
@@ -76,32 +75,40 @@ def login():
 @app.route("/pagos/<int:pago_id>")
 def ver_pago(pago_id):
     comercio = request.headers.get("X-Comercio-Id")
+    if not comercio:
+        return jsonify(error="cabecera X-Comercio-Id requerida"), 400
     fila = conexion().execute(
         "SELECT id, comercio_id, monto, tarjeta FROM pagos WHERE id = ?", (pago_id,)
     ).fetchone()
     if not fila:
         return jsonify(error="no existe"), 404
     # Verificar que el comercio solicitante sea el propietario del pago
-    if str(comercio) != str(fila[1]):
-        return jsonify(error="no existe"), 404
+    if str(fila[1]) != str(comercio):
+        return jsonify(error="no encontrado"), 404
     # Registrar solo los últimos 4 dígitos de la tarjeta
-    ultimos4 = fila[3][-4:]
     log.info(
         "Consulta de pago %s del comercio %s con tarjeta **** %s",
         pago_id,
         comercio,
-        ultimos4,
+        fila[3][-4:],
     )
-    return jsonify(id=fila[0], comercio_id=fila[1], monto=fila[2], tarjeta="**** " + ultimos4)
+    return jsonify(
+        id=fila[0],
+        comercio_id=fila[1],
+        monto=fila[2],
+        tarjeta="**** " + fila[3][-4:],
+    )
 
 
 @app.route("/diagnostico")
 def diagnostico():
     host = request.args.get("host", "127.0.0.1")
+    # Validar que host sea una dirección IP válida
     try:
         ipaddress.ip_address(host)
     except ValueError:
         return jsonify(error="host inválido"), 400
+    # Ejecutar ping sin usar shell=True
     salida = subprocess.run(
         ["ping", "-c", "1", host], capture_output=True, text=True
     )
@@ -120,10 +127,10 @@ def cargar_preferencias():
 def importar_config():
     try:
         cfg = yaml.safe_load(request.get_data(as_text=True))
-    except yaml.YAMLError:
+        if not isinstance(cfg, dict):
+            raise ValueError("YAML no es un diccionario")
+    except Exception:
         return jsonify(error="YAML inválido"), 400
-    if not isinstance(cfg, dict):
-        return jsonify(error="configuración no es un diccionario"), 400
     return jsonify(claves=sorted(cfg))
 
 

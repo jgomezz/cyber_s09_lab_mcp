@@ -1,0 +1,19 @@
+# Cliente único de modelos (kit común)
+litellm>=1.50,<1.106
+python-dotenv>=1.0
+pyyaml>=6.0
+# Análisis estático, dependencias y pruebas
+bandit>=1.7
+pip-audit>=2.7
+pytest>=8.0
+# Para que las pruebas puedan cargar la API de ejemplo (no instalen app_andina/requirements.txt)
+flask>=3.0
+requests>=2.32
+# Salida estructurada, Excel y consulta a PyPI
+pydantic>=2.7
+pandas>=2.2
+openpyxl>=3.1
+httpx>=0.27
+# Protocolo MCP (servidor y cliente). La versión 2 cambió de nombres: se fija la 1.x
+mcp>=1.10,<2
+anyio>=4.0

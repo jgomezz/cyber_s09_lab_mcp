@@ -1,0 +1,3 @@
+# Opcional · Semgrep (escalón 1). Es un paquete grande.
+# Si en Windows la instalación falla, úsenlo desde WSL o sigan sin él: el escalón 1 funciona con Bandit y pip-audit.
+semgrep>=1.100

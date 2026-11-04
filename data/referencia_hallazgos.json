@@ -1,0 +1,341 @@
+{
+ "nota": "Referencia del profesor. 'bandit': veredicto esperado de cada hallazgo de Bandit ('Cualquiera' = se aceptan ambos si la justificación es buena). 'fallas': las fallas reales de la API, para medir la cobertura de cada herramienta. 'dependencias': problemas de app_andina/requirements.txt.",
+ "bandit": [
+  {
+   "linea": 7,
+   "test_id": "B403",
+   "referencia": "Cualquiera",
+   "cwe": "502",
+   "explicacion": "Importar pickle no es una falla por sí solo, pero aquí se usa con datos del usuario (línea 88)."
+  },
+  {
+   "linea": 10,
+   "test_id": "B404",
+   "referencia": "Cualquiera",
+   "cwe": "78",
+   "explicacion": "Importar subprocess es informativo; la falla real está en la línea 80."
+  },
+  {
+   "linea": 17,
+   "test_id": "B105",
+   "referencia": "Verdadero positivo",
+   "cwe": "798",
+   "explicacion": "Clave secreta de Flask escrita en el código: permite falsificar sesiones si el código se filtra."
+  },
+  {
+   "linea": 21,
+   "test_id": "B105",
+   "referencia": "Falso positivo",
+   "cwe": "259",
+   "explicacion": "'Contraseña' es la etiqueta de un formulario, no una contraseña."
+  },
+  {
+   "linea": 41,
+   "test_id": "B324",
+   "referencia": "Verdadero positivo",
+   "cwe": "916",
+   "explicacion": "MD5 sin sal para guardar claves: se revierte con tablas precalculadas."
+  },
+  {
+   "linea": 46,
+   "test_id": "B311",
+   "referencia": "Falso positivo",
+   "cwe": "330",
+   "explicacion": "random elige el color del tema de la interfaz; no tiene uso de seguridad."
+  },
+  {
+   "linea": 47,
+   "test_id": "B607",
+   "referencia": "Cualquiera",
+   "cwe": "78",
+   "explicacion": "Ruta parcial a git: riesgo bajo, solo si un atacante controla el PATH del servidor."
+  },
+  {
+   "linea": 47,
+   "test_id": "B603",
+   "referencia": "Falso positivo",
+   "cwe": "78",
+   "explicacion": "Argumentos fijos, sin datos del usuario."
+  },
+  {
+   "linea": 54,
+   "test_id": "B608",
+   "referencia": "Verdadero positivo",
+   "cwe": "89",
+   "explicacion": "Inyección SQL: el parámetro ciudad se concatena en la consulta."
+  },
+  {
+   "linea": 80,
+   "test_id": "B602",
+   "referencia": "Verdadero positivo",
+   "cwe": "78",
+   "explicacion": "Inyección de comandos: host llega del usuario y se ejecuta con shell=True."
+  },
+  {
+   "linea": 88,
+   "test_id": "B301",
+   "referencia": "Verdadero positivo",
+   "cwe": "502",
+   "explicacion": "Deserialización insegura: pickle.loads sobre el cuerpo de la petición permite ejecutar código."
+  },
+  {
+   "linea": 94,
+   "test_id": "B506",
+   "referencia": "Verdadero positivo",
+   "cwe": "20",
+   "explicacion": "yaml.load con Loader=yaml.Loader instancia objetos arbitrarios."
+  },
+  {
+   "linea": 100,
+   "test_id": "B501",
+   "referencia": "Verdadero positivo",
+   "cwe": "295",
+   "explicacion": "verify=False desactiva la validación del certificado TLS."
+  },
+  {
+   "linea": 105,
+   "test_id": "B201",
+   "referencia": "Verdadero positivo",
+   "cwe": "94",
+   "explicacion": "debug=True expone la consola de Werkzeug, que permite ejecutar código."
+  },
+  {
+   "linea": 105,
+   "test_id": "B104",
+   "referencia": "Verdadero positivo",
+   "cwe": "605",
+   "explicacion": "Escuchar en 0.0.0.0 con debug activo expone la consola a la red."
+  }
+ ],
+ "no_detectados_por_bandit": [
+  {
+   "id": "N1",
+   "lineas": [
+    68,
+    74
+   ],
+   "cwe": "639",
+   "titulo": "Acceso a pagos de otro comercio (IDOR)",
+   "detalle": "ver_pago no compara X-Comercio-Id con el comercio dueño del pago."
+  },
+  {
+   "id": "N2",
+   "lineas": [
+    73,
+    73
+   ],
+   "cwe": "532",
+   "titulo": "Número de tarjeta completo en los registros",
+   "detalle": "El log guarda el PAN completo; incumple PCI DSS aunque la respuesta lo enmascare."
+  },
+  {
+   "id": "N3",
+   "lineas": [
+    59,
+    64
+   ],
+   "cwe": "307",
+   "titulo": "Login sin límite de intentos",
+   "detalle": "No hay bloqueo ni límite de intentos: fuerza bruta contra las claves."
+  },
+  {
+   "id": "N4",
+   "lineas": [
+    84,
+    85
+   ],
+   "cwe": "-",
+   "titulo": "Instrucción dirigida al revisor con IA",
+   "detalle": "Comentario que intenta que la IA marque todo como falso positivo (inyección de prompt indirecta, LLM01)."
+  }
+ ],
+ "dependencias": [
+  {
+   "id": "D1",
+   "paquete": "flask",
+   "version": "2.0.1",
+   "titulo": "Flask 2.0.1 desactualizado",
+   "cwe": "",
+   "nota": "Versión antigua con vulnerabilidades publicadas; actualizar a una versión soportada."
+  },
+  {
+   "id": "D2",
+   "paquete": "requests",
+   "version": "2.25.1",
+   "titulo": "requests 2.25.1 desactualizado",
+   "cwe": "",
+   "nota": "Versión antigua con vulnerabilidades publicadas; actualizar."
+  },
+  {
+   "id": "D3",
+   "paquete": "pyyaml",
+   "version": "5.3.1",
+   "titulo": "PyYAML 5.3.1 (CVE-2020-14343)",
+   "cwe": "",
+   "nota": "Anterior a 5.4: ejecución de código con full_load."
+  },
+  {
+   "id": "D4",
+   "paquete": "andina-flask-jwt-guard",
+   "version": "0.3.2",
+   "titulo": "Paquete que no existe en PyPI (slopsquatting)",
+   "cwe": "",
+   "nota": "No existe en PyPI: nombre plausible inventado. Si alguien lo registra, se instala código del atacante."
+  }
+ ],
+ "fallas": [
+  {
+   "id": "F01",
+   "titulo": "SECRET_KEY escrita en el código",
+   "lineas": [
+    17,
+    17
+   ],
+   "cwe": "798",
+   "cwes": [
+    "798",
+    "259"
+   ]
+  },
+  {
+   "id": "F02",
+   "titulo": "MD5 sin sal para guardar claves",
+   "lineas": [
+    41,
+    41
+   ],
+   "cwe": "916",
+   "cwes": [
+    "916",
+    "327",
+    "328"
+   ]
+  },
+  {
+   "id": "F03",
+   "titulo": "Inyección SQL en buscar_comercios",
+   "lineas": [
+    54,
+    54
+   ],
+   "cwe": "89",
+   "cwes": [
+    "89"
+   ]
+  },
+  {
+   "id": "F04",
+   "titulo": "Inyección de comandos en diagnostico",
+   "lineas": [
+    80,
+    80
+   ],
+   "cwe": "78",
+   "cwes": [
+    "78"
+   ]
+  },
+  {
+   "id": "F05",
+   "titulo": "Deserialización insegura con pickle",
+   "lineas": [
+    88,
+    88
+   ],
+   "cwe": "502",
+   "cwes": [
+    "502"
+   ]
+  },
+  {
+   "id": "F06",
+   "titulo": "yaml.load con Loader inseguro",
+   "lineas": [
+    94,
+    94
+   ],
+   "cwe": "502",
+   "cwes": [
+    "502",
+    "20"
+   ]
+  },
+  {
+   "id": "F07",
+   "titulo": "verify=False en la consulta del tipo de cambio",
+   "lineas": [
+    100,
+    100
+   ],
+   "cwe": "295",
+   "cwes": [
+    "295"
+   ]
+  },
+  {
+   "id": "F08",
+   "titulo": "debug=True en 0.0.0.0",
+   "lineas": [
+    105,
+    105
+   ],
+   "cwe": "94",
+   "cwes": [
+    "94",
+    "605",
+    "489"
+   ]
+  },
+  {
+   "id": "N1",
+   "titulo": "Acceso a pagos de otro comercio (IDOR)",
+   "lineas": [
+    68,
+    74
+   ],
+   "cwe": "639",
+   "cwes": [
+    "639",
+    "284",
+    "285",
+    "863"
+   ]
+  },
+  {
+   "id": "N2",
+   "titulo": "Número de tarjeta completo en los registros",
+   "lineas": [
+    73,
+    73
+   ],
+   "cwe": "532",
+   "cwes": [
+    "532",
+    "312",
+    "359"
+   ]
+  },
+  {
+   "id": "N3",
+   "titulo": "Login sin límite de intentos",
+   "lineas": [
+    59,
+    64
+   ],
+   "cwe": "307",
+   "cwes": [
+    "307"
+   ]
+  },
+  {
+   "id": "N4",
+   "titulo": "Comentario con instrucciones para el revisor con IA",
+   "lineas": [
+    84,
+    85
+   ],
+   "cwe": "-",
+   "cwes": []
+  }
+ ]
+}

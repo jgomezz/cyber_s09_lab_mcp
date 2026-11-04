@@ -1,0 +1,92 @@
+# Reglas de Semgrep del laboratorio (Clase 9).
+# Funcionan sin conexión y dan el mismo resultado en todos los equipos.
+# Las primeras son patrones genéricos; las dos últimas codifican conocimiento del negocio
+# de Andina Pagos, algo que Bandit no puede hacer.
+rules:
+  - id: sql-con-fstring
+    languages: [python]
+    severity: ERROR
+    message: Consulta SQL armada con f-string; usar parámetros (?) en vez de concatenar.
+    metadata: {cwe: "CWE-89"}
+    pattern-either:
+      - pattern: $DB.execute(f"...", ...)
+      - pattern: $DB.execute("..." + $X, ...)
+      - pattern: $DB.execute("..." % $X, ...)
+
+  - id: subprocess-con-shell
+    languages: [python]
+    severity: ERROR
+    message: subprocess con shell=True y un texto armado en tiempo de ejecución.
+    metadata: {cwe: "CWE-78"}
+    patterns:
+      - pattern: subprocess.$F($CMD, ..., shell=True, ...)
+      - pattern-not: subprocess.$F("...", ..., shell=True, ...)
+
+  - id: pickle-sobre-datos-externos
+    languages: [python]
+    severity: ERROR
+    message: pickle.loads sobre datos de la petición permite ejecutar código.
+    metadata: {cwe: "CWE-502"}
+    pattern: pickle.loads(request.$M(...))
+
+  - id: yaml-load-inseguro
+    languages: [python]
+    severity: ERROR
+    message: yaml.load con un Loader que crea objetos arbitrarios; usar yaml.safe_load.
+    metadata: {cwe: "CWE-502"}
+    pattern-either:
+      - pattern: yaml.load($X, Loader=yaml.Loader)
+      - pattern: yaml.load($X, Loader=yaml.UnsafeLoader)
+      - pattern: yaml.load($X, Loader=yaml.FullLoader)
+
+  - id: tls-sin-verificar
+    languages: [python]
+    severity: WARNING
+    message: verify=False desactiva la validación del certificado TLS.
+    metadata: {cwe: "CWE-295"}
+    pattern: requests.$F(..., verify=False, ...)
+
+  - id: flask-debug-activo
+    languages: [python]
+    severity: WARNING
+    message: Flask con debug=True expone la consola de Werkzeug.
+    metadata: {cwe: "CWE-94"}
+    pattern: $APP.run(..., debug=True, ...)
+
+  - id: secret-key-en-codigo
+    languages: [python]
+    severity: WARNING
+    message: SECRET_KEY escrita en el código.
+    metadata: {cwe: "CWE-798"}
+    pattern: $APP.config["SECRET_KEY"] = "..."
+
+  - id: hash-debil-para-claves
+    languages: [python]
+    severity: WARNING
+    message: MD5 o SHA-1 para guardar claves; usar un algoritmo lento con sal (bcrypt, scrypt, argon2).
+    metadata: {cwe: "CWE-916"}
+    pattern-either:
+      - pattern: hashlib.md5(...)
+      - pattern: hashlib.sha1(...)
+
+  # --- Reglas de negocio de Andina Pagos ---
+  - id: andina-tarjeta-en-registros
+    languages: [python]
+    severity: ERROR
+    message: "Regla de Andina Pagos: un registro (log) menciona la tarjeta. PCI DSS prohíbe guardar el número completo."
+    metadata: {cwe: "CWE-532"}
+    patterns:
+      - pattern: $LOG.$NIVEL("$MSG", ...)
+      - metavariable-regex:
+          metavariable: $NIVEL
+          regex: (debug|info|warning|error|critical)
+      - metavariable-regex:
+          metavariable: $MSG
+          regex: (?i).*tarjeta.*
+
+  - id: andina-encabezado-de-identidad
+    languages: [python]
+    severity: INFO
+    message: "Regla de Andina Pagos: la identidad del comercio viene de un encabezado. Revisar a mano que se compare con el dueño del recurso."
+    metadata: {cwe: "CWE-639"}
+    pattern: request.headers.get("X-Comercio-Id", ...)

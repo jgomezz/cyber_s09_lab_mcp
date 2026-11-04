@@ -1,0 +1,22 @@
+{
+ "nota": "Respuestas de PyPI guardadas el 1-nov-2026, para trabajar sin red. 200 = existe, 404 = no existe.",
+ "paquetes": {
+  "flask": 200,
+  "requests": 200,
+  "pyyaml": 200,
+  "andina-flask-jwt-guard": 404,
+  "andina-sql-guard": 404,
+  "flask-limiter": 200,
+  "bcrypt": 200,
+  "argon2-cffi": 200,
+  "passlib": 200,
+  "pyjwt": 200,
+  "flask-jwt-extended": 200,
+  "defusedxml": 200,
+  "flask-talisman": 200,
+  "werkzeug": 200,
+  "flask-wtf": 200,
+  "marshmallow": 200,
+  "pydantic": 200
+ }
+}

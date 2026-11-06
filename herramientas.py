@@ -8,6 +8,7 @@ import json
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 from pathlib import Path
@@ -54,9 +55,9 @@ def leer_codigo(archivo: str = "app.py", desde: int = 1, hasta: int = 0) -> str:
     return "\n".join(f"{i:>4}  {lineas[i - 1]}" for i in range(max(1, desde), hasta + 1))
 
 
-def bandit() -> list[dict]:
+def bandit(carpeta: Path | None = None) -> list[dict]:
     try:
-        r = _correr([sys.executable, "-m", "bandit", "-r", str(carpeta_app()), "-f", "json", "-q"], timeout=120)
+        r = _correr([sys.executable, "-m", "bandit", "-r", str(carpeta or carpeta_app()), "-f", "json", "-q"], timeout=120)
     except subprocess.TimeoutExpired:
         raise RuntimeError("Bandit no terminó en 120 segundos")
     try:
@@ -143,4 +144,52 @@ def pruebas(carpeta: Path) -> dict:
         ok = int(m.group(1)) if (m := re.search(r"(\d+) passed", r.stdout)) else 0
         mal = sum(int(x) for x in re.findall(r"(\d+) (?:failed|error)", r.stdout))
         out[nombre] = {"pasan": ok, "total": ok + mal}
+    return out
+
+
+CORREGIDA = BASE / "salidas" / "remediacion" / "app_andina"
+
+
+def carpeta_version(version: str) -> Path:
+    """'original' = la aplicación revisada · 'corregida' = la copia que escribe la remediación."""
+    if version == "original":
+        return carpeta_app()
+    if version == "corregida":
+        if not (CORREGIDA / "app.py").exists():
+            raise ValueError("Todavía no hay versión corregida: guarden una con guardar_correccion.")
+        return CORREGIDA
+    raise ValueError("version debe ser 'original' o 'corregida'")
+
+
+def _borrar_copia(carpeta: Path) -> None:
+    """Borra la copia aunque tenga atributo de solo lectura: copytree lo hereda del original y, en Windows, rmtree falla (WinError 5)."""
+    for raiz, _, archivos in os.walk(carpeta):
+        for ruta in [raiz, *(os.path.join(raiz, a) for a in archivos)]:
+            os.chmod(ruta, os.stat(ruta).st_mode | stat.S_IWRITE)
+    shutil.rmtree(carpeta)
+
+
+def guardar_correccion(codigo: str) -> str:
+    """Escribe app.py corregido en una COPIA de la aplicación (salidas/remediacion/app_andina). Nunca toca el original."""
+    if "from flask import" not in codigo or "app = Flask" not in codigo:
+        raise ValueError("El código no parece ser el app.py completo de la API.")
+    if CORREGIDA.exists():
+        _borrar_copia(CORREGIDA)
+    shutil.copytree(carpeta_app(), CORREGIDA, ignore=shutil.ignore_patterns("__pycache__"))
+    (CORREGIDA / "app.py").write_text(codigo, encoding="utf-8")
+    return f"app.py corregido guardado en la copia ({len(codigo.splitlines())} líneas)"
+
+
+def pruebas_detalle(carpeta: Path) -> dict:
+    """Corre las pruebas funcionales y de seguridad y devuelve el resultado de cada una, con el motivo si falla."""
+    out = {}
+    for tipo, archivo in (("funcional", "test_app.py"), ("seguridad", "test_seguridad.py")):
+        try:
+            r = _correr([sys.executable, "-m", "pytest", "-q", "-rA", "--no-header", "-p", "no:cacheprovider", "--tb=line",
+                         str(BASE / "tests" / archivo)], timeout=180, env={"APP_DIR": str(carpeta), "COLUMNS": "250"}, cwd=BASE)
+            salida = r.stdout
+        except subprocess.TimeoutExpired:
+            salida = ""
+        for m in re.finditer(r"^(PASSED|FAILED|ERROR) \S*::(\w+)(?: - (.*))?$", salida, flags=re.M):
+            out[m.group(2)] = {"tipo": tipo, "ok": m.group(1) == "PASSED", "motivo": (m.group(3) or "")[:200]}
     return out

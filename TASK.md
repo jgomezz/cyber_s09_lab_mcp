@@ -1,1 +1,0 @@
-python revisor.py --proveedor ollama_cloud --controles ninguno

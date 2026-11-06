@@ -4,7 +4,9 @@ No se ejecuta a mano: lo lanza el cliente (la demo o revisor.py) como otro proce
 entrada y la salida estándar (transporte stdio) con mensajes JSON-RPC. stdout queda reservado para el
 protocolo; lo que registra el servidor va a stderr y aparece en la consola con el prefijo [servidor].
 
-Todas las herramientas son de solo lectura: ninguna modifica el código ni instala nada.
+Las herramientas de revisión son de solo lectura. Para la remediación hay tres más: guardar_correccion escribe
+app.py en una COPIA de la aplicación (nunca el original), y ejecutar_pruebas y analizar_bandit_version miden
+la versión original o la corregida.
 """
 import json
 import sys
@@ -81,6 +83,30 @@ def auditar_dependencias() -> str:
     filas, origen = h.pip_audit()
     _log(f"auditar_dependencias: origen de los datos = {origen}")
     return _responder("auditar_dependencias", t0, filas)
+
+
+@mcp.tool()
+def guardar_correccion(codigo: Annotated[str, Field(description="El archivo app.py COMPLETO, ya corregido")]) -> str:
+    """Guarda app.py corregido en una copia de la aplicación (salidas/remediacion). Nunca modifica el original."""
+    t0 = time.perf_counter()
+    _log(f"recibí tools/call guardar_correccion(): {len(codigo.splitlines())} líneas")
+    return _responder("guardar_correccion", t0, h.guardar_correccion(codigo))
+
+
+@mcp.tool()
+def ejecutar_pruebas(version: Annotated[str, Field(description="'original' o 'corregida'")] = "original") -> str:
+    """Ejecuta las pruebas funcionales (la API no se rompe) y de seguridad (la falla está corregida) y devuelve el resultado de cada una."""
+    t0 = time.perf_counter()
+    _log(f"recibí tools/call ejecutar_pruebas({version!r}): ejecuto pytest")
+    return _responder("ejecutar_pruebas", t0, h.pruebas_detalle(h.carpeta_version(version)))
+
+
+@mcp.tool()
+def analizar_bandit_version(version: Annotated[str, Field(description="'original' o 'corregida'")] = "original") -> str:
+    """Ejecuta Bandit sobre la versión original o la corregida de la aplicación."""
+    t0 = time.perf_counter()
+    _log(f"recibí tools/call analizar_bandit_version({version!r})")
+    return _responder("analizar_bandit_version", t0, h.bandit(h.carpeta_version(version)))
 
 
 if __name__ == "__main__":

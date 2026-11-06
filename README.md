@@ -27,6 +27,9 @@ python revisor.py --simulado --controles ninguno --sin-parche   # prueba el fluj
 | `controles.py` | Los controles C1 a C4 |
 | `revisor.py` | El laboratorio: revisor con IA + controles + comparación con la referencia |
 | `demo_1_protocolo.py` … `demo_3_modelo_elige.py` | Los scripts de la demo del profesor |
+| `a_mano.py` | Ejercicio 1: las alertas de Bandit con su código, una por una, como se revisa hoy |
+| `remediar.py` | Remediación asistida: la IA corrige la API y las pruebas y Bandit, por MCP, verifican el antes y el después. Con `--pr`, redacta el pull request |
+| `prueba_nueva.py` | La IA escribe la prueba que falta (login sin límite de intentos) y, con `--corregir`, la corrección |
 | `ataques/` | Desafíos extra: dos ataques que se corren sin y con controles |
 | `comparar.py` | Opcional: compara modelos y combinaciones de controles |
 | `data/referencia_hallazgos.json` | La referencia del profesor (16 fallas) |
@@ -41,19 +44,49 @@ python demo_3_modelo_elige.py --proveedor ollama_cloud   # el modelo elige qué 
 
 ## Laboratorio
 
-**Parte 1 · Sin controles**
+**Ejercicio 1 · Como se hace hoy** (15 minutos con cronómetro)
 
 ```bash
-python revisor.py --proveedor ollama_cloud --controles ninguno
+python a_mano.py --pruebas
 ```
 
-**Parte 2 · Activar los controles, de a uno**
+Revisen las 15 alertas de Bandit: cuáles son reales, cuáles son falsos positivos, qué falla no ve Bandit, y corrijan
+a mano una (por ejemplo, la inyección SQL de buscar_comercios). Anoten cuánto avanzaron.
+
+**Ejercicio 2 · La IA revisa**
 
 ```bash
-python revisor.py --proveedor ollama_cloud --controles C1 --sin-parche
-python revisor.py --proveedor ollama_cloud --controles C1,C2 --sin-parche
-python revisor.py --proveedor ollama_cloud --controles C1,C2,C3
+python revisor.py --proveedor <proveedor> --controles todos --sin-parche
 ```
+
+**Ejercicio 3 · La IA corrige y las pruebas lo verifican** (antes y después)
+
+```bash
+python remediar.py --proveedor <proveedor> --pr
+```
+
+La IA devuelve app.py corregido; por MCP se guarda en una copia (salidas/remediacion/app_andina), se ejecutan las
+pruebas y Bandit, y si algo falla la IA recibe el error y lo intenta de nuevo (hasta 3 veces). Al final: una tabla
+por vulnerabilidad (antes, después y cómo se verificó), el diff en salidas/remediacion/cambios.diff y la descripción
+del pull request en salidas/remediacion/PR.md.
+
+**Ejercicio 4 · La prueba que falta**
+
+```bash
+python prueba_nueva.py --proveedor <proveedor> --corregir
+```
+
+El login sin límite de intentos quedó en «Revisar a mano». La IA escribe la prueba (tiene que fallar en la versión
+original), agrega el límite y se ejecutan todas las pruebas.
+
+**Cierre · ¿Qué podría salir mal?**
+
+```bash
+python remediar.py --proveedor <proveedor> --sin-verificar      # la IA corrige sin mirar las pruebas
+python revisor.py --proveedor <proveedor> --controles ninguno --sin-parche   # sin controles
+```
+
+Los controles del revisor (opcional: se pueden apagar con `--controles`):
 
 | Control | Riesgo | Qué hace |
 | --- | --- | --- |
@@ -78,3 +111,4 @@ python comparar.py                                               # todas las cor
 Ollama Cloud (`ollama_cloud`) es el principal hasta el 9 de noviembre. El respaldo es `groq_oss`: el mismo
 modelo gpt-oss-120b en el plan gratuito de Groq. Si el proveedor responde "límite por minuto", el programa espera
 y reintenta solo. `--simulado` no usa ninguna API: sirve para probar el flujo, no para sacar conclusiones.
+

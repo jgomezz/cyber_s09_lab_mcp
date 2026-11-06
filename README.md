@@ -112,3 +112,10 @@ Ollama Cloud (`ollama_cloud`) es el principal hasta el 9 de noviembre. El respal
 modelo gpt-oss-120b en el plan gratuito de Groq. Si el proveedor responde "límite por minuto", el programa espera
 y reintenta solo. `--simulado` no usa ninguna API: sirve para probar el flujo, no para sacar conclusiones.
 
+
+python revisor.py --proveedor ollama_cloud --controles todos --sin-parche
+
+python remediar.py --proveedor ollama_cloud --pr
+
+
+python prueba_nueva.py --proveedor ollama_cloud --corregir

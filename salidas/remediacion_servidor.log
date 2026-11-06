@@ -1,0 +1,17 @@
+[servidor] iniciado · aplicación revisada: /Users/developer/git_cyber/cyber_s09_lab_mcp/app_andina · espero mensajes JSON-RPC por stdin
+[servidor] recibí tools/call analizar_bandit_version('original')
+[servidor] analizar_bandit_version: devuelvo 3052 caracteres en 85 ms
+[servidor] recibí tools/call ejecutar_pruebas('original'): ejecuto pytest
+[servidor] ejecutar_pruebas: devuelvo 1356 caracteres en 474 ms
+[servidor] recibí tools/call guardar_correccion(): 153 líneas
+[servidor] guardar_correccion: devuelvo 50 caracteres en 2 ms
+[servidor] recibí tools/call ejecutar_pruebas('corregida'): ejecuto pytest
+[servidor] ejecutar_pruebas: devuelvo 1234 caracteres en 523 ms
+[servidor] recibí tools/call analizar_bandit_version('corregida')
+[servidor] analizar_bandit_version: devuelvo 1332 caracteres en 149 ms
+[servidor] recibí tools/call guardar_correccion(): 153 líneas
+[servidor] guardar_correccion: devuelvo 50 caracteres en 3 ms
+[servidor] recibí tools/call ejecutar_pruebas('corregida'): ejecuto pytest
+[servidor] ejecutar_pruebas: devuelvo 1138 caracteres en 463 ms
+[servidor] recibí tools/call analizar_bandit_version('corregida')
+[servidor] analizar_bandit_version: devuelvo 1529 caracteres en 82 ms
